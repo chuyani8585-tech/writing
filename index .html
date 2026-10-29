@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>五官會說話：情緒描寫生成器</title>
+<style>
+:root{--bg:#fbf8f3;--fg:#2b2724;--card:#fff;--line:#d9d2c8;--mute:#9a9186;--skin:#f4d9bd;--pale:#e6e3e0;--acc:#c2410c;--eye:#fff;--ink:#2b2724;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1a18;--fg:#efe9e1;--card:#262321;--line:#443f3a;--mute:#8d857b;--skin:#c9a888;--pale:#a9a8aa;--acc:#fb923c;--eye:#f4f1ec}}
+:root[data-theme="dark"]{--bg:#1c1a18;--fg:#efe9e1;--card:#262321;--line:#443f3a;--mute:#8d857b;--skin:#c9a888;--pale:#a9a8aa;--acc:#fb923c;--eye:#f4f1ec}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.7 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
+main{max-width:920px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:1.4rem;margin:0 0 4px}.sub{color:var(--mute);margin:0 0 16px;font-size:.92rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+textarea{width:100%;min-height:150px;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;background:var(--bg);color:var(--fg);resize:vertical}
+.ex button{margin:6px 6px 0 0;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:20px;padding:4px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.chk{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.chk span{padding:2px 12px;border-radius:20px;border:1px dashed var(--mute);color:var(--mute);font-size:.9rem}
+.chk span.on{border:1px solid var(--acc);color:var(--acc);font-weight:700}
+.bar{height:12px;border-radius:8px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .4s}
+.tags{margin-top:10px;font-size:.85rem;color:var(--mute)}.tags b{color:var(--fg);font-weight:500;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:0 6px;margin:2px 4px 2px 0;display:inline-block}
+#fb{margin:10px 0 0;font-weight:700}
+svg{width:100%;max-width:340px;display:block;margin:0 auto}.mini{max-width:190px;margin:8px auto}h2{font-size:1.15rem;margin:30px 0 4px}#cohe{margin-top:16px}.tabs{display:flex;gap:8px;margin:0 0 16px}.tabs button{flex:1;padding:10px;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:10px;font:inherit;cursor:pointer}.tabs button.on{border-color:var(--acc);color:var(--acc);font-weight:700}section[hidden]{display:none}.ev{margin:6px 0;padding:6px 10px;border-left:3px solid var(--acc);background:var(--bg);font-size:.92rem}#cohe p{margin:4px 0}#cohe .ok{color:var(--acc)}
+@keyframes jit{50%{transform:translateY(-5px)}}@keyframes shk{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.jit{animation:jit .25s infinite}.shk{animation:shk .12s infinite}
+</style></head><body><main>
+<h1>五官會說話：情緒描寫生成器</h1>
+<p class="sub">把你的情緒描寫貼進來，電腦只會畫出你「寫到」的部位。寫得越具體，臉就越完整！</p>
+<div class="tabs"><button id="b1" class="on">① 單獨描寫情感</button><button id="b2">② 劇情連貫</button></div><section id="m1">
+<div class="grid">
+<div class="card">
+<div class="ex"><button id="nt">🎲 抽一個情緒</button></div><div class="ev" id="tg">題目：按下按鈕抽一個情緒，只能用五官動作描寫，不能直接寫出情緒的名字。</div><textarea id="t" placeholder="例：眉頭緊皺，眉毛斜挑壓低。雙眼圓睜，瞳孔縮小……（提示：眉、眼、鼻、嘴都要寫）"></textarea>
+<div class="ex">範例：<button data-i="0">憤怒</button><button data-i="1">驚訝</button><button data-i="2">悲傷</button><button data-i="3">喜悅</button><button data-i="4">清空</button></div>
+<div class="chk" id="chk"></div>
+<div class="bar"><i id="bar"></i></div>
+<p id="fb"></p><div class="tags" id="tags"></div>
+</div>
+<div class="card"><svg id="s" viewBox="0 0 300 340" role="img" aria-label="依描寫生成的臉"></svg></div>
+</div>
+</section><section id="m2" hidden><h2>劇情連貫模式：情緒的變化</h2>
+<p class="sub ex"><button id="nsc">🎲 抽隨機事件</button> 每一格都會抽到一個事件，請寫出臉部的反應。<br>用三格寫出「開頭→轉折→結尾」，格與格之間要用「接著」「突然」「最後」等詞銜接，臉的變化也要合理。</p>
+<div class="grid" id="fr"></div>
+<div class="card" id="cohe"></div></section>
+</main>
+<script>
+let NEED=null,CUR=null;const P=[
+{id:'brow',n:'眉',core:1,k:/眉/,g:{shape:[[/斜挑|倒豎|橫眉|怒眉|吊/,'slant'],[/皺|蹙|擰|擠|鎖|糾結/,'furrow'],[/八字|下垂|垂下|眉尾/,'worry'],[/低|壓|沉/,'low'],[/揚|挑|抬|聳|豎|高/,'raise']],jump:[[/跳|抽動|上下活動|迅速/,1]]}},
+{id:'eye',n:'眼',core:1,k:/眼|睛|瞳|目|眸|淚|眶|瞪|瞇/,g:{shape:[[/閉上|闔|閉眼/,'closed'],[/瞪|睜|圓睜|大眼|張大/,'wide'],[/瞇|眯|半闔|細長|一條線/,'narrow'],[/低垂|垂下|垂眼|下垂/,'droop']],pupil:[[/瞳.{0,2}(放大|擴大|擴張|張大)/,'big'],[/瞳.{0,2}(縮|收|針)/,'small']],tear:[[/淚|哭|泣|濕潤|眶/,1]]}},
+{id:'nose',n:'鼻',core:1,k:/鼻/,g:{flare:[[/孔|翼|擴張|張大|煽|搧|噴/,1]],wr:[[/皺|縮|梁|頭|扭曲/,1]]}},
+{id:'mouth',n:'嘴',core:1,k:/嘴|唇|口|牙|舌|齒|笑|咧/,g:{shape:[[/張|開|呆|合不攏|叫|喊|驚呼/,'open'],[/緊閉|抿|緊繃|咬|閉緊|閉上/,'press'],[/上揚|揚起|微笑|笑|咧|上翹|上彎/,'smile'],[/下垂|下撇|下彎|癟|撇|扁|下拉|向下/,'frown']],teeth:[[/牙|齒|露/,1]]}},
+{id:'oth',n:'臉色／其他',core:0,k:/臉|頰|額|汗|顫|抖|蒼白/,g:{blush:[[/紅|燙/,1]],pale:[[/蒼白|發白|慘白|煞白/,1]],sweat:[[/汗/,1]],lines:[[/紋|青筋/,1]],shk:[[/顫|抖/,1]]}}];
+function parse(t){const st={};P.forEach(p=>st[p.id]={here:0,h:{},l:[],c:{}});
+t.split(/[，,。；;！!？?\n、]+/).map(s=>s.trim()).filter(Boolean).forEach(c=>P.forEach(p=>{if(!p.k.test(c))return;const s=st[p.id];let hit=0;
+for(const g in p.g){for(const [re,v] of p.g[g]){if(re.test(c)){if(!s.h[g]){s.h[g]=v;s.c[g]=c.slice(0,14);hit=1}break}}}
+if(p.core)s.here=1;else if(hit)s.here=1;if(hit&&!s.l.includes(c))s.l.push(c.slice(0,14))}));return st}
+const BR={none:[0,0,0],raise:[-14,-3,-5],low:[8,3,3],furrow:[6,9,-3],slant:[3,12,-8],worry:[-2,-10,6]};
+function brow(sd,b){const [dy,i,o]=BR[b.h.shape||'none'];const ix=150+sd*(b.h.shape==='furrow'?10:15),ox=150+sd*65,yo=120+dy+o,yi=120+dy+i;
+return `<path d="M${ox} ${yo}Q${(ox+ix)/2} ${(yo+yi)/2-7} ${ix} ${yi}" fill="none" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>`}
+function eye(sd,e){const cx=150+sd*40,sh=e.h.shape;
+if(sh==='closed')return `<path d="M${cx-20} 150Q${cx} 162 ${cx+20} 150" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/>`;
+const ry={wide:15,narrow:3.5,droop:6}[sh]||9;let pr=e.h.pupil==='big'?9:e.h.pupil==='small'?3:(sh==='wide'?5:6);pr=Math.min(pr,ry+1);
+return `<g transform="rotate(${sh==='droop'?sd*8:0} ${cx} 150)"><ellipse cx="${cx}" cy="150" rx="20" ry="${ry}" fill="var(--eye)" stroke="var(--ink)" stroke-width="2.5"/><circle cx="${cx}" cy="150" r="${pr}" fill="var(--ink)"/></g>`
++(e.h.tear?`<path d="M${cx+sd*6} ${150+ry+4}Q${cx+sd*10} ${150+ry+22} ${cx+sd*6} ${150+ry+34}" stroke="#3b9ae1" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="${cx+sd*6}" cy="${150+ry+38}" rx="4" ry="6" fill="#3b9ae1"/>`:'')}
+function nose(n){let s=`<path d="M150 168L145 202Q150 208 158 202" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/>`;
+if(n.h.flare)s+=`<ellipse cx="136" cy="206" rx="7" ry="4" fill="var(--ink)"/><ellipse cx="164" cy="206" rx="7" ry="4" fill="var(--ink)"/><path d="M127 197Q122 208 132 213M173 197Q178 208 168 213" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"/>`;
+else s+=`<circle cx="143" cy="205" r="2.5" fill="var(--ink)"/><circle cx="157" cy="205" r="2.5" fill="var(--ink)"/>`;
+if(n.h.wr)s+=[170,177,184].map(y=>`<path d="M${138} ${y}Q150 ${y-4} 162 ${y}" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>`).join('');return s}
+function mouth(m){const sh=m.h.shape,te=m.h.teeth,k='fill="none" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"';
+const T=`<rect x="122" y="244" width="56" height="14" rx="5" fill="#fff" stroke="var(--ink)" stroke-width="2.5"/>`+[136,150,164].map(x=>`<path d="M${x} 244V258" stroke="var(--ink)" stroke-width="1.5"/>`).join('');
+if(sh==='open')return `<ellipse cx="150" cy="256" rx="19" ry="23" fill="#5a1f1f" stroke="var(--ink)" stroke-width="3"/>`+(te?`<path d="M133 245Q150 238 167 245L167 251Q150 247 133 251Z" fill="#fff"/>`:'');
+if(sh==='smile')return te?`<path d="M112 244Q150 250 188 244Q150 290 112 244Z" fill="#fff" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>`:`<path d="M115 244Q150 276 185 244" ${k}/>`;
+if(sh==='frown')return `<path d="M118 264Q150 236 182 264" ${k}/>`;
+if(te)return T;return `<path d="M122 252H178" ${k} ${sh==='press'?'':'stroke-width="3"'}/>`}
+function ph(t,x,y,d){return `<g opacity=".7"><path d="${d}" fill="none" stroke="var(--mute)" stroke-width="2.5" stroke-dasharray="5 5"/><text x="${x}" y="${y}" text-anchor="middle" font-size="15" fill="var(--mute)">${t}</text></g>`}
+function draw(st,nd){const w=i=>!nd||nd.includes(i),o=st.oth.h;let s=`<g class="${o.shk?'shk':''}"><ellipse cx="150" cy="172" rx="102" ry="132" fill="${o.pale?'var(--pale)':'var(--skin)'}" stroke="var(--ink)" stroke-width="3"/>`;
+if(o.blush)s+=`<circle cx="82" cy="206" r="20" fill="#e5484d" opacity=".35"/><circle cx="218" cy="206" r="20" fill="#e5484d" opacity=".35"/>`;
+if(o.lines)s+=[78,89,100].map(y=>`<path d="M110 ${y}Q130 ${y-6} 150 ${y}T190 ${y}" fill="none" stroke="var(--ink)" stroke-width="2" opacity=".6"/>`).join('');
+if(o.sweat)s+=`<path d="M236 96Q226 114 236 120Q246 114 236 96Z" fill="#3b9ae1"/>`;
+if(st.brow.here){s+=`<g class="${st.brow.h.jump?'jit':''}">`+brow(-1,st.brow)+brow(1,st.brow)+(st.brow.h.shape==='furrow'?`<path d="M144 108V128M156 108V128" stroke="var(--ink)" stroke-width="2" opacity=".6"/>`:'')+`</g>`}else if(w('brow'))s+=ph('眉？',150,100,'M85 120Q110 112 135 120M165 120Q190 112 215 120');
+s+=st.eye.here?eye(-1,st.eye)+eye(1,st.eye):w('eye')?ph('眼？',150,176,'M90 150Q110 138 130 150Q110 162 90 150M170 150Q190 138 210 150Q190 162 170 150'):'';
+s+=st.nose.here?nose(st.nose):w('nose')?ph('鼻？',150,222,'M150 168L145 202Q150 208 158 202'):'';
+s+=st.mouth.here?mouth(st.mouth):w('mouth')?ph('嘴？',150,278,'M120 252H180'):'';return s+'</g>'}
+const EX=['眉頭緊皺，眉毛斜挑壓低。雙眼圓睜，瞳孔縮小。鼻孔擴張，鼻梁皺起。嘴唇緊閉，咬緊牙關，額頭浮現青筋，臉漲得通紅。','眉毛高高揚起，眼睛睜得大大的，瞳孔放大。嘴巴張得合不攏，臉色發白，額頭冒出冷汗。','眉尾下垂，眼眶泛紅，淚水滑落。鼻頭皺起。嘴角下垂，嘴唇顫抖。','眉毛微微上揚，眼睛瞇成一條線。嘴角上揚，咧嘴露出牙齒，雙頰泛紅。'];
+const $=i=>document.getElementById(i),t=$('t');
+const FIT={快樂:{brow:{shape:['raise']},eye:{shape:['narrow','closed'],pupil:['big']},mouth:{shape:['smile'],teeth:[1]},oth:{blush:[1]}},驚訝:{brow:{shape:['raise']},eye:{shape:['wide'],pupil:['big']},mouth:{shape:['open']},oth:{pale:[1],sweat:[1]}},恐懼:{brow:{shape:['raise','worry']},eye:{shape:['wide'],pupil:['big'],tear:[1]},mouth:{shape:['open','press']},oth:{pale:[1],sweat:[1],shk:[1]}},厭惡:{brow:{shape:['low','furrow']},eye:{shape:['narrow']},nose:{wr:[1],flare:[1]},mouth:{shape:['frown','press']}},憤怒:{brow:{shape:['furrow','slant','low']},eye:{shape:['wide','narrow'],pupil:['small']},nose:{flare:[1],wr:[1]},mouth:{shape:['press','open'],teeth:[1]},oth:{blush:[1],lines:[1],shk:[1]}},悲傷:{brow:{shape:['worry','low']},eye:{shape:['droop','closed'],tear:[1]},mouth:{shape:['frown']},oth:{shk:[1],pale:[1]}}};
+function ev(st,e){const r={fit:{},bad:[]};for(const p of P){const s=st[p.id],f=(FIT[e]||{})[p.id];r.fit[p.id]=0;for(const g in s.h){const v=s.h[g];if(f&&f[g]){if(f[g].includes(v))r.fit[p.id]++;else r.bad.push(s.c[g])}else if(!f&&p.core)r.bad.push(s.c[g])}}return r}
+function run(){const st=parse(t.value),E=NEED?ev(st,CUR):null,core=P.filter(p=>p.core),got=core.filter(p=>st[p.id].here),need=NEED?core.filter(p=>NEED.includes(p.id)):core,free=!NEED,nn=free?3:need.length,gc=free?Math.min(got.length,3):need.filter(p=>E.fit[p.id]>0).length,cap=Math.round(2.5*nn),det=NEED?P.reduce((a,p)=>a+E.fit[p.id],0):P.reduce((a,p)=>a+Object.keys(st[p.id].h).length,0),pct=Math.round(gc/nn*60+Math.min(det,cap)/cap*40);
+$('s').innerHTML=draw(st,NEED);$('bar').style.width=pct+'%';
+$('chk').innerHTML=P.map(p=>`<span class="${NEED&&p.core?(E.fit[p.id]>0?'on':''):st[p.id].here?'on':''}">${p.n}${NEED&&p.core&&!NEED.includes(p.id)?'（選填）':''} ${NEED&&p.core?(E.fit[p.id]>0?'✓':st[p.id].here?'△':NEED.includes(p.id)?'？':'—'):st[p.id].here?'✓':'？'}</span>`).join('');
+const miss=need.filter(p=>!st[p.id].here).map(p=>p.n).join('、');let f;
+if(!t.value.trim())f='臉還是一片空白，先寫寫看吧！';else if(!got.length)f='還沒有辨識到五官，試著寫出「眉」「眼」「鼻」「嘴」的動作。';
+else if(free?got.length<3:miss)f=free?`完整度 ${pct}%。再多描寫 ${3-got.length} 個部位吧（眉、眼、鼻、嘴擇三個以上）。`:`完整度 ${pct}%。這個情緒的重點部位還沒描寫：${miss}。`;
+else{const vague=(free?got:need).filter(p=>!Object.keys(st[p.id].h).length).map(p=>p.n);f=pct>=90?`完整度 ${pct}%，這張臉的情緒已經很清楚了！`:`完整度 ${pct}%。重點部位都到齊了，${vague.length?'「'+vague.join('、')+'」還看不出變化，請寫更具體的動作（如揚起、皺起、擴張、下垂）。':'再加上瞳孔、鼻孔、牙齒、臉色等細節會更生動。'}`}
+if(NEED&&t.value.trim()&&got.length){const nw=need.filter(p=>!st[p.id].here).map(p=>p.n),hv=need.filter(p=>st[p.id].here&&!Object.keys(st[p.id].h).length).map(p=>p.n),wr=need.filter(p=>st[p.id].here&&Object.keys(st[p.id].h).length&&!E.fit[p.id]).map(p=>p.n),bd=[...new Set(E.bad)];
+f=`完整度 ${pct}%。`+(nw.length?`重點部位還沒描寫：${nw.join('、')}。`:'')+(hv.length?`「${hv.join('、')}」還看不出變化，請寫更具體的動作（如揚起、皺起、擴張、下垂）。`:'')+(wr.length?`「${wr.join('、')}」的描寫和「${CUR}」不太相符，想想這個情緒的臉會怎麼動。`:'')+(bd.length?`留意：「${bd.join('」「')}」不太像「${CUR}」。`:'');
+if(!nw.length&&!hv.length&&!wr.length&&!bd.length)f=pct>=90?`完整度 ${pct}%，這張臉的「${CUR}」很清楚了！`:`完整度 ${pct}%。重點部位都符合了，再加上瞳孔、鼻孔、牙齒、臉色等細節會更生動。`}
+$('fb').textContent=f;
+$('tags').innerHTML=P.some(p=>st[p.id].l.length)?'辨識到的細節：'+P.flatMap(p=>st[p.id].l).map(x=>`<b>${x}</b>`).join(''):''}
+t.addEventListener('input',run);
+document.querySelectorAll('.ex button').forEach(b=>b.onclick=()=>{t.value=EX[b.dataset.i]||'';NEED=null;CUR=null;$('tg').textContent='範例模式：不限定情緒，描寫三個以上部位即可。';run()});run();
+const EV=[['站在成績公布欄前，尋找自己的名字','看到自己的名次遠低於預期','好友走來，輕輕拍了拍你的肩膀'],['走進教室，發現同學們都停下談話看著你','你聽見有人說是你洩漏了祕密','真正的原因被說明，大家向你道歉'],['放學回家，看見桌上放著一個沒署名的盒子','打開後發現是你一直想要的東西','卡片上寫著送禮人是多年不聯絡的朋友'],['比賽剩最後十秒，比數落後一分','你接到球，投出最後一球','哨聲響起，結果揭曉'],['在車站等著久別的家人出現','人群中終於看見熟悉的身影','兩人面對面，卻一時說不出話'],['鬧鐘沒響，醒來時已經八點二十分','衝到校門口，發現門剛好關上','老師微笑著說：今天考試延後'],['把信放進他的抽屜，心跳得很快','隔天他當著大家的面念出這封信','他走到你面前，說了一句出乎意料的話'],['站在舞台側邊，聽見主持人唸出你的名字','走到麥克風前，腦中突然一片空白','台下有人開始鼓掌']],LB=['① 開頭','② 轉折','③ 結尾'],CN=/起初|一開始|接著|然後|突然|忽然|隨後|漸漸|慢慢|不久|隨即|此時|這時|轉眼|終於|最後|後來|霎時|頓時/,VAL={smile:2,frown:-2,press:-1,slant:-2,furrow:-1,worry:-1,droop:-1};
+const fr=$('fr');fr.innerHTML=LB.map((l,i)=>`<div class="card"><b>${l}</b><div class="ev" id="e${i}"></div><svg class="mini" id="f${i}" viewBox="0 0 300 340"></svg><textarea style="min-height:100px" placeholder="${i?'用銜接詞開頭，例如：突然……':'例如：一開始……'}"></textarea></div>`).join('');
+const val=s=>(VAL[s.brow.h.shape]||0)+(VAL[s.eye.h.shape]||0)+(VAL[s.mouth.h.shape]||0)-(s.eye.h.tear?2:0);
+function runF(){const tx=[...fr.querySelectorAll('textarea')].map(x=>x.value),ss=tx.map(parse);ss.forEach((s,i)=>$('f'+i).innerHTML=draw(s));
+let pts=0,h='';for(let i=1;i<3;i++){const L=LB[i-1]+' → '+LB[i]+'：';if(!tx[i-1].trim()||!tx[i].trim()){h+=`<p>${L}還沒寫完。</p>`;continue}
+const cn=CN.test(tx[i]),d=P.filter(p=>JSON.stringify(ss[i][p.id].h)!==JSON.stringify(ss[i-1][p.id].h)||ss[i][p.id].here!==ss[i-1][p.id].here).map(p=>p.n),dv=val(ss[i])-val(ss[i-1]);
+pts+=cn+(d.length>0);h+=`<p>${L}${cn?'<span class="ok">✓ 有銜接詞</span>':'✗ 缺少銜接詞（如「接著」「突然」）'}；${d.length?'<span class="ok">✓ 臉部變了：'+d.join('、')+'</span>':'✗ 兩格的臉幾乎沒變，情緒真的有轉折嗎？'}；${dv>0?'↗ 情緒轉好':dv<0?'↘ 情緒轉差':'→ 情緒持平'}</p>`}
+const all=tx.every(x=>x.trim());$('cohe').innerHTML=`<b>連貫度 ${pts}/4</b>`+h+(all?`<p style="margin-top:10px"><b>合併成一段：</b>${tx.join('')}</p><p class="sub">試著朗讀一遍：讀起來順不順？情緒的變化有原因嗎？</p>`:'')}
+fr.addEventListener('input',runF);let last=-1;function roll(){let k;do{k=Math.floor(Math.random()*EV.length)}while(k===last);last=k;EV[k].forEach((e,i)=>$('e'+i).textContent='事件：'+e)}$('nsc').onclick=roll;roll();runF();
+const EM=['快樂','驚訝','恐懼','厭惡','憤怒','悲傷'];let le=-1;const NE={快樂:['eye','mouth'],驚訝:['brow','eye','mouth'],恐懼:['brow','eye','mouth'],厭惡:['nose','mouth'],憤怒:['brow','eye','mouth'],悲傷:['brow','eye','mouth']},NM={brow:'眉',eye:'眼',nose:'鼻',mouth:'嘴'};
+$('nt').onclick=()=>{let k;do{k=Math.floor(Math.random()*EM.length)}while(k===le);le=k;CUR=EM[k];NEED=NE[CUR];$('tg').textContent='題目：請只用五官動作描寫「'+EM[k]+'」的臉，不能寫出這個詞。重點部位：'+NEED.map(i=>NM[i]).join('、')+'（其他部位選填）。';run()};
+function tab(n){$('m1').hidden=n!==1;$('m2').hidden=n!==2;$('b1').className=n===1?'on':'';$('b2').className=n===2?'on':''}
+$('b1').onclick=()=>tab(1);$('b2').onclick=()=>tab(2);
+</script></body></html>
